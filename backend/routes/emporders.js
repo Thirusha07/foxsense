@@ -39,6 +39,40 @@ const checkSession = (req, res, next) => {
         res.status(401).json({ message: "Unauthorized" });
     }
 };
+router.get('/viewcafes',checkSession,(req,res)=>{
+    const sql='SELECT * FROM Cafeteria';
+    con.query(sql,(err,results)=>{
+        if(err){
+            res.json({Error:err})
+        }
+        else{
+            res.json({Cafes:results})
+        }
+    })
+
+})
+router.post('/viewmenu',checkSession,(req,res)=>{
+    const sql1="SELECT daysid  FROM Days WHERE days=?"
+    const values1=[req.body.day];
+    con.query(sql1,values1,(err1,result1)=>{
+        if(err1){
+            res.json({Error:err1})
+        }
+        else{
+            const sql='SELECT * FROM Menus WHERE cafeid=? AND days_id=?';
+            const values=[req.body.cafeid,result1[0].daysid];
+            con.query(sql,values,(err,result)=>{
+                if(err){
+                    res.json({Error:err})
+                }
+                else{
+                    res.json({Menu:result})
+                }
+            })
+        }
+    })
+
+})
 router.post('/placeorder',checkSession,(req,res)=>{
     var bill=0;
     const currentDate = new Date();

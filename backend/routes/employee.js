@@ -39,6 +39,16 @@ var con=mysql.createConnection({
 con.connect();
 
 var router=express.Router();
+const checkSession = (req, res, next) => {
+    // Check if session exists
+    if (req.session && req.session.user) {
+        // Session exists, continue to the next middleware/route handler
+        next();
+    } else {
+        // Session doesn't exist, or user is not logged in
+        res.status(401).json({ message: "Unauthorized" });
+    }
+};
 
 router.post('/signup',(req,res)=>{
     bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
@@ -149,6 +159,28 @@ router.get('/notifications',checkSession,(req,res)=>{
             res.json({Message:result})
         }
     })
+})
+router.post('/description',checkSession,(req,res)=>{
+    const sql1='select descriptionid from Description where description=?';
+    const values1=[req.body.description];
+    con.query(sql1,values1,(err1,res1)=>{
+        if(err1){
+            res.json({Error:err1})
+        }
+        else{
+            const sql='Select itemname from Items where descriptionid=?';
+            const values=[res1[0].descriptionid]
+            con.query(sql,values,(err2,res2)=>{
+                if(err2){
+                    res.json({Error:err2})
+                }
+                else{
+                    res.json({Message:res2})
+                }
+            })
+        }
+    })
+
 })
 
 module.exports = router;
